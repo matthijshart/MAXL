@@ -256,6 +256,91 @@
         }
 
         /* ============================================
+           TIMELINE BAR
+           ============================================ */
+        .timeline-wrapper {
+            position: relative;
+            padding-left: 60px;
+        }
+
+        .timeline-bar {
+            position: absolute;
+            top: 0;
+            left: 30px;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(
+                to bottom,
+                transparent 0px,
+                var(--ey-yellow) 40px,
+                var(--ey-yellow) 33%,
+                var(--gold) 50%,
+                var(--gold) 66%,
+                var(--blood-red) 80%,
+                var(--blood-red) 95%,
+                transparent 100%
+            );
+            z-index: 2;
+        }
+
+        .timeline-dot {
+            position: absolute;
+            left: 30px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            transform: translateX(-7px);
+            z-index: 3;
+            border: 2px solid;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .timeline-dot::after {
+            content: attr(data-year);
+            position: absolute;
+            left: -50px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 1px;
+            white-space: nowrap;
+            color: #555;
+            text-align: right;
+            width: 40px;
+        }
+
+        .timeline-dot.active {
+            transform: translateX(-7px) scale(1.4);
+        }
+
+        .timeline-dot--2025 {
+            background: var(--ey-yellow);
+            border-color: var(--ey-yellow);
+            box-shadow: 0 0 12px rgba(255, 230, 0, 0.4);
+        }
+
+        .timeline-dot--2035 {
+            background: var(--gold);
+            border-color: var(--gold);
+            box-shadow: 0 0 12px rgba(201, 168, 76, 0.4);
+        }
+
+        .timeline-dot--2045 {
+            background: var(--blood-red);
+            border-color: var(--blood-red);
+            box-shadow: 0 0 12px rgba(139, 0, 0, 0.4);
+        }
+
+        .timeline-dot--end {
+            background: #333;
+            border-color: #555;
+            width: 10px;
+            height: 10px;
+            transform: translateX(-4px);
+        }
+
+        /* ============================================
            SECTION BASE
            ============================================ */
         .section {
@@ -846,6 +931,22 @@
                 font-size: 5rem;
                 opacity: 0.5;
             }
+
+            .timeline-wrapper {
+                padding-left: 35px;
+            }
+
+            .timeline-bar {
+                left: 15px;
+            }
+
+            .timeline-dot {
+                left: 15px;
+            }
+
+            .timeline-dot::after {
+                display: none;
+            }
         }
 
         /* Safe area insets for iPhones with notch/dynamic island */
@@ -923,6 +1024,16 @@
             <div class="scroll-arrow"></div>
         </div>
     </section>
+
+    <!-- ==========================================
+         TIMELINE WRAPPER - from Chapter I to end
+         ========================================== -->
+    <div class="timeline-wrapper" id="timelineWrapper">
+        <div class="timeline-bar"></div>
+        <div class="timeline-dot timeline-dot--2025" data-year="2025" id="dot2025"></div>
+        <div class="timeline-dot timeline-dot--2035" data-year="2035" id="dot2035"></div>
+        <div class="timeline-dot timeline-dot--2045" data-year="2045" id="dot2045"></div>
+        <div class="timeline-dot timeline-dot--end" data-year="" id="dotEnd"></div>
 
     <!-- ==========================================
          QUOTE 1
@@ -1304,6 +1415,8 @@
         <cite class="reveal">— Het Universum, Waarschijnlijk</cite>
     </section>
 
+    </div><!-- END TIMELINE WRAPPER -->
+
     <!-- ==========================================
          FOOTER
          ========================================== -->
@@ -1453,6 +1566,59 @@
                 ticking = true;
             }
         }, { passive: true });
+
+        // ============================================
+        // TIMELINE DOTS POSITIONING
+        // ============================================
+        function positionTimelineDots() {
+            const wrapper = document.getElementById('timelineWrapper');
+            if (!wrapper) return;
+            const wrapperTop = wrapper.offsetTop;
+
+            const sections = [
+                { id: 'era2025', dot: 'dot2025' },
+                { id: 'era2035', dot: 'dot2035' },
+                { id: 'era2045', dot: 'dot2045' },
+            ];
+
+            sections.forEach(({ id, dot }) => {
+                const section = document.getElementById(id);
+                const dotEl = document.getElementById(dot);
+                if (section && dotEl) {
+                    dotEl.style.top = (section.offsetTop - wrapperTop) + 'px';
+                }
+            });
+
+            // End dot at the bottom
+            const endDot = document.getElementById('dotEnd');
+            if (endDot) {
+                endDot.style.top = (wrapper.scrollHeight - 20) + 'px';
+            }
+        }
+
+        // Position dots on load and resize
+        positionTimelineDots();
+        window.addEventListener('resize', positionTimelineDots);
+
+        // Activate dots when their section is in view
+        const dotObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                const dotId = 'dot' + entry.target.id.replace('era', '');
+                const dot = document.getElementById(dotId);
+                if (dot) {
+                    if (entry.isIntersecting) {
+                        dot.classList.add('active');
+                    } else {
+                        dot.classList.remove('active');
+                    }
+                }
+            });
+        }, { threshold: 0.2 });
+
+        ['era2025', 'era2035', 'era2045'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) dotObserver.observe(el);
+        });
 
         // ============================================
         // KONAMI CODE EASTER EGG (↑↑↓↓←→←→BA)
