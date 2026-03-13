@@ -194,6 +194,17 @@
             font-style: italic;
         }
 
+        .hero-godfather {
+            font-family: 'Playfair Display', serif;
+            font-size: clamp(1.1rem, 2.5vw, 1.6rem);
+            font-style: italic;
+            color: #cc3333;
+            margin-bottom: 20px;
+            opacity: 0;
+            animation: fadeInUp 1s ease 0.85s forwards;
+            letter-spacing: 2px;
+        }
+
         .ey-badge {
             display: inline-flex;
             align-items: center;
@@ -903,6 +914,7 @@
             De man die zijn jeugddromen opzij zette om zich te wijden aan de <em>nobele kunst</em> van de omzetbelasting.
             Eén BTW-aangifte tegelijk maakt hij de wereld een <em>marginaal betere</em> plek.
         </p>
+        <div class="hero-godfather">De Godfather van de Omzetbelasting</div>
         <div class="ey-badge">
             ◆ BTW-Adviseur &nbsp;·&nbsp; EY &nbsp;·&nbsp; Since 2025 ◆
         </div>
@@ -1398,6 +1410,9 @@
             setTimeout(() => particle.remove(), 20000);
         }
 
+        // Detect touch device for performance
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+
         // Fewer particles on mobile for performance
         const particleCount = isTouchDevice ? 8 : 20;
         const particleInterval = isTouchDevice ? 2000 : 800;
@@ -1411,8 +1426,6 @@
         // ============================================
         // PARALLAX SCROLL EFFECT
         // ============================================
-        // Detect touch device for performance
-        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         let ticking = false;
 
         window.addEventListener('scroll', () => {
