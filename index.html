@@ -2,7 +2,7 @@
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Max van Langeveld — The BTW Whisperer</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=Inter:wght@300;400;600;700;900&family=JetBrains+Mono:wght@400;700&display=swap');
@@ -32,7 +32,13 @@
             background: #0a0a0a;
             color: #fff;
             overflow-x: hidden;
-            cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='24' font-size='24'>💶</text></svg>") 16 16, auto;
+            -webkit-overflow-scrolling: touch;
+        }
+
+        @media (pointer: fine) {
+            body {
+                cursor: url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='32' height='32'><text y='24' font-size='24'>💶</text></svg>") 16 16, auto;
+            }
         }
 
         /* ============================================
@@ -42,25 +48,26 @@
             position: fixed;
             bottom: 20px;
             right: 20px;
-            width: 120px;
-            height: 120px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             overflow: hidden;
             border: 3px solid var(--ey-yellow);
-            box-shadow: 0 0 30px rgba(255, 230, 0, 0.3);
+            box-shadow: 0 0 20px rgba(255, 230, 0, 0.3);
             z-index: 1000;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .floating-photo:hover {
-            transform: scale(1.2) rotate(5deg);
-            box-shadow: 0 0 50px rgba(255, 230, 0, 0.6);
+            /* GPU layer for smooth iOS fixed positioning */
+            transform: translateZ(0);
+            -webkit-transform: translateZ(0);
+            will-change: transform;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
         }
 
         .floating-photo img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
         }
 
         /* ============================================
@@ -772,10 +779,73 @@
             }
 
             .floating-photo {
-                width: 80px;
-                height: 80px;
-                bottom: 10px;
-                right: 10px;
+                width: 70px;
+                height: 70px;
+                bottom: 12px;
+                right: 12px;
+                border-width: 2px;
+            }
+
+            .section {
+                padding: 80px 16px;
+            }
+
+            .timeline-card {
+                padding: 24px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+
+            .stat-card {
+                padding: 20px 15px;
+            }
+
+            .stat-number {
+                font-size: 2.2rem;
+            }
+
+            .marquee-container {
+                padding: 6px 0;
+            }
+
+            .marquee-track span {
+                font-size: 11px;
+                padding: 0 20px;
+                letter-spacing: 1px;
+            }
+
+            .parallax-divider {
+                height: 40vh;
+            }
+
+            .quote-section {
+                padding: 60px 20px;
+            }
+
+            .perk {
+                padding: 15px;
+            }
+
+            .era-2025 .year-big,
+            .era-2035 .year-big,
+            .era-2045 .year-big {
+                font-size: 5rem;
+                opacity: 0.5;
+            }
+        }
+
+        /* Safe area insets for iPhones with notch/dynamic island */
+        @supports (padding-bottom: env(safe-area-inset-bottom)) {
+            .floating-photo {
+                bottom: calc(12px + env(safe-area-inset-bottom));
+                right: calc(12px + env(safe-area-inset-right));
+            }
+
+            .footer {
+                padding-bottom: calc(80px + env(safe-area-inset-bottom));
             }
         }
     </style>
@@ -1328,51 +1398,48 @@
             setTimeout(() => particle.remove(), 20000);
         }
 
-        // Create initial particles
-        for (let i = 0; i < 20; i++) {
+        // Fewer particles on mobile for performance
+        const particleCount = isTouchDevice ? 8 : 20;
+        const particleInterval = isTouchDevice ? 2000 : 800;
+
+        for (let i = 0; i < particleCount; i++) {
             setTimeout(createParticle, i * 300);
         }
 
-        // Keep creating particles
-        setInterval(createParticle, 800);
+        setInterval(createParticle, particleInterval);
 
         // ============================================
         // PARALLAX SCROLL EFFECT
         // ============================================
+        // Detect touch device for performance
+        const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
         let ticking = false;
 
         window.addEventListener('scroll', () => {
             if (!ticking) {
                 requestAnimationFrame(() => {
-                    const scrolled = window.pageYOffset;
+                    // Skip heavy parallax on mobile for performance
+                    if (!isTouchDevice) {
+                        // Parallax backgrounds
+                        document.querySelectorAll('.parallax-bg').forEach(bg => {
+                            const rect = bg.parentElement.getBoundingClientRect();
+                            const speed = 0.3;
+                            bg.style.transform = `translateY(${rect.top * speed}px)`;
+                        });
 
-                    // Parallax backgrounds
-                    document.querySelectorAll('.parallax-bg').forEach(bg => {
-                        const rect = bg.parentElement.getBoundingClientRect();
-                        const speed = 0.3;
-                        bg.style.transform = `translateY(${rect.top * speed}px)`;
-                    });
-
-                    // Floating photo rotation based on scroll
-                    const photo = document.getElementById('floatingPhoto');
-                    if (photo) {
-                        const rotation = Math.sin(scrolled * 0.005) * 5;
-                        const scale = 1 + Math.sin(scrolled * 0.003) * 0.05;
-                        photo.style.transform = `rotate(${rotation}deg) scale(${scale})`;
+                        // Year big text parallax
+                        document.querySelectorAll('.year-big').forEach(year => {
+                            const rect = year.parentElement.getBoundingClientRect();
+                            const speed = -0.15;
+                            year.style.transform = `translateY(${rect.top * speed}px)`;
+                        });
                     }
-
-                    // Year big text parallax
-                    document.querySelectorAll('.year-big').forEach(year => {
-                        const rect = year.parentElement.getBoundingClientRect();
-                        const speed = -0.15;
-                        year.style.transform = `translateY(${rect.top * speed}px)`;
-                    });
 
                     ticking = false;
                 });
                 ticking = true;
             }
-        });
+        }, { passive: true });
 
         // ============================================
         // KONAMI CODE EASTER EGG (↑↑↓↓←→←→BA)
